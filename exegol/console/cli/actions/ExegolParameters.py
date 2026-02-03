@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from exegol.console.cli.ExegolCompleter import HybridContainerImageCompleter, VoidCompleter, BuildProfileCompleter, ImageCompleter
@@ -360,8 +361,22 @@ class Activate(Command):
                              help="Revoke your local Exegol license "
                                   "(default: [red not italic]False[/red not italic])")
 
+        self.api_key = Option("--api",
+                              action="store",
+                              dest="api_key",
+                              default=os.environ.get("EXEGOL_API_KEY"),
+                              help="Use an API Key to activate Exegol")
+
+        self.license_id = Option("--license-id",
+                                 action="store",
+                                 dest="license_id",
+                                 default=os.environ.get("EXEGOL_LICENSE_ID"),
+                                 help="License ID to activate Exegol")
+
         # Create group parameter for container selection
         self.groupArgs.append(GroupArg({"arg": self.revoke, "required": False},
+                                       {"arg": self.api_key, "required": False},
+                                       {"arg": self.license_id, "required": False},
                                        title="[bold cyan]Activate[/bold cyan] [blue]specific options[/blue]"))
 
     def __call__(self, *args, **kwargs):

@@ -375,7 +375,11 @@ owIDAQAB
         else:
             logger.verbose(display)
         if self.__expiration_date is not None:
-            logger.verbose(f"License valid until {self.__expiration_date}")
+            display = f"License valid until {self.__expiration_date}"
+            if as_info:
+                logger.info(display)
+            else:
+                logger.verbose(display)
 
     def display_support_info(self):
         logger.verbose("Support information:")
