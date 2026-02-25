@@ -67,7 +67,11 @@ class LicenseManager:
                     await self.__interactive_activation()
                 except KeyboardInterrupt as e:
                     if self.__user_session is not None:
-                        await self.__user_session.auth.sign_out({"scope": "local"})
+                        try:
+                            await self.__user_session.auth.sign_out({"scope": "local"})
+                        except Exception:
+                            # Skip connection errors during logout
+                            pass
                     raise e
         else:
             LocalDatastore().update_eula(False)
@@ -170,7 +174,11 @@ class LicenseManager:
 
             try:
                 await self.__activation(id_match[selected_license_id], revoke_previous_machine)
-                await self.__user_session.auth.sign_out({"scope": "local"})
+                try:
+                    await self.__user_session.auth.sign_out({"scope": "local"})
+                except Exception:
+                    # Skip connection errors during logout
+                    pass
                 return True
             except CancelOperation:
                 selected_license_id = None
