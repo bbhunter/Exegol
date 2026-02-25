@@ -469,7 +469,7 @@ class ExegolTUI:
                                  f"{container.image.getName()}")
         if "N/A" not in container.image.getImageVersion():
             container_info_header += f" - v.{container.image.getImageVersion()}"
-        if "Unknown" not in container.image.getStatus():
+        if ExegolImage.UNKNOWN_STATUS not in container.image.getStatus():
             container_info_header += f" ({container.image.getStatus(include_version=False)})"
         if container.image.getArch().split('/')[0] != EnvInfo.arch or logger.isEnabledFor(ExeLog.VERBOSE):
             color = ConsoleFormat.getArchColor(container.image.getArch())

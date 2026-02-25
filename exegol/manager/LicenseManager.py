@@ -58,12 +58,17 @@ class LicenseManager:
             await self.__api_activation()
         # Do you want to activate your Exegol?
         elif skip_prompt or await ExegolRich.Confirm("Do you want to activate your Exegol subscription now?", default=False):
-            try:
-                await self.__interactive_activation()
-            except KeyboardInterrupt as e:
-                if self.__user_session is not None:
-                    await self.__user_session.auth.sign_out({"scope": "local"})
-                raise e
+            if ParametersManager().offline_mode:
+                logger.info("If you have an offline license, you can generate an exegol license from the exegol web dashboard and activate your wrapper.")
+                logger.info(f"Activation ID of your current machine: [green]{MUID.get_activation_id()[:4]}-{MUID.get_activation_id()[4:]}[/green]")
+                return
+            else:
+                try:
+                    await self.__interactive_activation()
+                except KeyboardInterrupt as e:
+                    if self.__user_session is not None:
+                        await self.__user_session.auth.sign_out({"scope": "local"})
+                    raise e
         else:
             LocalDatastore().update_eula(False)
             logger.warning("[green]Community[/green] plan (i.e., free) is strictly limited to personal, non-commercial, educational, or research purposes.")
@@ -83,7 +88,7 @@ class LicenseManager:
             logger.warning("If you've recently enrolled this machine, you [red]won't[/red] be able to reuse this license immediately on another machine.")
             if await ExegolRich.Confirm("Are you sure you want to revoke your license locally?", default=False):
                 await TaskManager.wait_for(TaskManager.TaskId.LoadLicense, clean_task=False)
-                LocalDatastore().deactivate_license()
+                self.__session.remove_license()
                 logger.success("Exegol license successfully revoked.")
         else:
             logger.info("You don't have an active license to revoke.")
@@ -135,6 +140,10 @@ class LicenseManager:
             current_license["valid_until"] = get_display_date(current_license["valid_until"])
             if current_license["last_seen"]:
                 current_license["last_seen"] = get_display_date(current_license["last_seen"])
+            if current_license.get("features") is not None:
+                current_license["type"] += f" ({', '.join(current_license['features'])})"
+            if "features" in current_license:
+                current_license.pop("features")
             table_data[str(i)] = current_license
             id_match[str(i)] = current_id
 
@@ -154,7 +163,7 @@ class LicenseManager:
                 raise CancelOperation
             try:
                 # Check if the license type is known to the wrapper
-                LicenseType[selected_license.get("type", "Unknown")]
+                LicenseType[selected_license.get("type", "Unknown").split()[0]]
             except KeyError as e:
                 logger.critical("This license type is not supported the current version of the wrapper. Please update your wrapper first.")
                 raise e
@@ -174,13 +183,20 @@ class LicenseManager:
             # Fallback mthd if docker not yet init
             current_os = platform.system().lower()
             if current_os == "darwin":
-                current_os = "Mac"
+                current_os = "mac"
+        hostname = platform.node()
+        if not hostname.strip():
+            import os
+            hostname = os.environ.get("HOSTNAME", "unknown")
+        if not hostname.strip():
+            hostname = "unknown"
         # Enroll
         enroll_form: EnrollmentForm = {
             "machine_id": MUID.get_current_muid(),
-            "machine_name": platform.node(),
+            "machine_name": hostname,
             "machine_os": current_os,
             "license_id": license_id,
+            "activation_id": MUID.get_activation_id()
         }
         if revoke_previous_machine:
             enroll_form["revoke_previous_machine"] = True
@@ -191,6 +207,8 @@ class LicenseManager:
             LocalDatastore().set(LocalDatastore.Key.TOKEN, enrollment_response.get("next_token"))
             LocalDatastore().set(LocalDatastore.Key.SESSION, enrollment_response.get("session"))
         else:
-            raise NotImplementedError
+            logger.critical("An unknown error occurred during activation. Contact support for assistance.")
+        if enrollment_response.get("offline_session") is not None:
+            self.__session.save_offline_session(enrollment_response.get("offline_session"))
         await self.__session.reload_session()
         logger.success("Exegol successfully activated!")

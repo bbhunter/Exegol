@@ -65,7 +65,7 @@ QSipTBpex0X2AoeZ4nLuVLlo8DXYziBk5YFBRKCjQ7xA
 
         if self.__cert is not None and self.__verify_cert(self.__cert):
             self.__update_cert_meta()
-        else:
+        elif not self.__local_refresh():
             self.__cert = None
 
     def __update_cert_meta(self) -> None:
@@ -100,6 +100,28 @@ QSipTBpex0X2AoeZ4nLuVLlo8DXYziBk5YFBRKCjQ7xA
             raise CancelOperation("Certificate not loaded")
         return self.__cert.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
 
+    def __local_refresh(self) -> bool:
+        """
+        Reload certificate from local cache. Return true if the cert have been updated
+        """
+        wrapper_cert = x509.load_pem_x509_certificate(self.__DEFAULT_PUB_CERT)
+        db_cert_raw = LocalDatastore().get(LocalDatastore.Key.SESSION_CERT)
+        if db_cert_raw is not None:
+            if type(db_cert_raw) is str:
+                db_cert_raw = db_cert_raw.encode("utf-8")
+            db_cert = x509.load_pem_x509_certificate(db_cert_raw)
+            # Check if DB cert is the same as wrapper cert, local update not possible
+            if db_cert.serial_number == wrapper_cert.serial_number:
+                return False
+        # Check if the wrapper cert is valid
+        if self.__verify_cert(wrapper_cert):
+            LocalDatastore().set(LocalDatastore.Key.SESSION_CERT, self.__DEFAULT_PUB_CERT)
+            self.__cert = wrapper_cert
+            self.__update_cert_meta()
+            return True
+        return False
+
+
     async def refresh_certificate(self, force_refresh: bool = False) -> bool:
         """
         Reload certificate from license server. Return true if the cert have been updated
@@ -109,6 +131,8 @@ QSipTBpex0X2AoeZ4nLuVLlo8DXYziBk5YFBRKCjQ7xA
         cert_changed = False
         # Default refresh only if needed
         if self.__cert is None or force_refresh:
+            if self.__local_refresh():
+                return True
             new_cert_raw = await SupabaseUtils.get_cert()
             new_cert = x509.load_pem_x509_certificate(new_cert_raw)
             if self.__verify_cert(new_cert):

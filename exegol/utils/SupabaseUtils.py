@@ -268,7 +268,7 @@ class SupabaseUtils:
             logger.error(f"An unknown error occurred when renewing session: [{e.status}] {e.message}")
 
     @classmethod
-    async def rotate_token(cls, form: dict) -> str:
+    async def rotate_token(cls, form: dict, show_connection_error: bool) -> str:
         if ParametersManager().offline_mode:
             raise LicenseToleration
         try:
@@ -280,11 +280,13 @@ class SupabaseUtils:
                 raise FunctionsRelayError("Received an empty response from license server.")
             return token
         except ConnectError:
-            logger.error("Exegol license server can't be reached without Internet access")
+            if show_connection_error:
+                logger.error("Exegol license server can't be reached without Internet access")
             raise LicenseToleration
         except (FunctionsRelayError, TransportError) as e:
             # Error during http request
-            logger.debug(f"Error during session refresh. Network error, retry later: {e}")
+            if show_connection_error:
+                logger.debug(f"Error during session refresh. Network error, retry later: {e}")
             raise LicenseToleration
         except FunctionsHttpError as e:
             cls.__handle_session_error(e)
@@ -348,7 +350,7 @@ class SupabaseUtils:
     @classmethod
     async def list_all_images(cls, arch: str) -> List[SupabaseImage]:
         if ParametersManager().offline_mode:
-            logger.warning("Can't list images without Internet access. Skipping.")
+            logger.warning("Can't list online images without Internet access. Skipping.")
             return []
         logger.debug(f"Listing images from metadata table")
         image_list = await cls.__execute((await cls.__create_client())
