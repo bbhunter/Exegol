@@ -507,7 +507,7 @@ class SessionHandler(metaclass=MetaSingleton):
         if self.__features is not None and len(self.__features) > 0:
             logger.verbose(f"- Features: {','.join([x.name for x in self.__features])}")
         logger.verbose(f"- Machine ID: {self.__machine_id}")
-        if self.__is_offline_capable():
+        if self.__is_offline_capable() and self.__activation_id is not None:
             if len(self.__activation_id) == 8:
                 logger.verbose(f"- Activation ID: [green]{self.__activation_id[:4]}-{self.__activation_id[4:]}[/green]")
             else:

@@ -144,8 +144,9 @@ class LicenseManager:
             current_license["valid_until"] = get_display_date(current_license["valid_until"])
             if current_license["last_seen"]:
                 current_license["last_seen"] = get_display_date(current_license["last_seen"])
-            if current_license.get("features") is not None:
-                current_license["type"] += f" ({', '.join(current_license['features'])})"
+            features = current_license.get("features")
+            if features is not None:
+                current_license["type"] += f" ({', '.join(features)})"
             if "features" in current_license:
                 current_license.pop("features")
             table_data[str(i)] = current_license
@@ -216,7 +217,8 @@ class LicenseManager:
             LocalDatastore().set(LocalDatastore.Key.SESSION, enrollment_response.get("session"))
         else:
             logger.critical("An unknown error occurred during activation. Contact support for assistance.")
-        if enrollment_response.get("offline_session") is not None:
-            self.__session.save_offline_session(enrollment_response.get("offline_session"))
+        offline_session = enrollment_response.get("offline_session")
+        if offline_session is not None:
+            self.__session.save_offline_session(offline_session)
         await self.__session.reload_session()
         logger.success("Exegol successfully activated!")
