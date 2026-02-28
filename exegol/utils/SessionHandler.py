@@ -515,6 +515,7 @@ class SessionHandler(metaclass=MetaSingleton):
                 logger.verbose(f"- Activation ID: [green]{self.__activation_id}[/green]")
             logger.verbose(f"- Is offline: {self.__offline_mode}")
             logger.verbose(f"- Offline key: {self.__get_offline_key_path()}")
+            logger.verbose(f"- Online session: {self.__token is not None}")
         else:
             act_id = MUID.get_activation_id()
             logger.verbose(f"- Activation ID: [green]{act_id[:4]}-{act_id[4:]}[/green]")
