@@ -102,7 +102,7 @@ QSipTBpex0X2AoeZ4nLuVLlo8DXYziBk5YFBRKCjQ7xA
 
     def __local_refresh(self) -> bool:
         """
-        Reload certificate from local cache. Return true if the cert have been updated
+        Reloads certificate from local cache. Returns True if the cert has been updated.
         """
         wrapper_cert = x509.load_pem_x509_certificate(self.__DEFAULT_PUB_CERT)
         db_cert_raw = LocalDatastore().get(LocalDatastore.Key.SESSION_CERT)
