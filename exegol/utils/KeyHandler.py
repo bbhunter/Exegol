@@ -109,6 +109,7 @@ QSipTBpex0X2AoeZ4nLuVLlo8DXYziBk5YFBRKCjQ7xA
         if db_cert_raw is not None:
             if type(db_cert_raw) is str:
                 db_cert_raw = db_cert_raw.encode("utf-8")
+            assert type(db_cert_raw) is bytes
             db_cert = x509.load_pem_x509_certificate(db_cert_raw)
             # Check if DB cert is the same as wrapper cert, local update not possible
             if db_cert.serial_number == wrapper_cert.serial_number:

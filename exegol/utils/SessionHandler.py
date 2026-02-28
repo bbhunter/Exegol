@@ -1,7 +1,7 @@
 from datetime import datetime
 from multiprocessing import Queue
 from pathlib import Path
-from typing import Optional, Tuple, Type, Union, Set
+from typing import Optional, Tuple, Type, Union, Set, cast
 
 import jwt
 
@@ -168,14 +168,14 @@ class SessionHandler(metaclass=MetaSingleton):
         """
         if self.__session is None:
             raise jwt.InvalidTokenError
-        session: SessionData = jwt.decode(self.__session,
-                             self.__key_handler.getKey(),
-                             algorithms=[self.__ALG],
-                             options={"require": ["iat", "iss", "aud", "exp"],
-                                      "verify_exp": False,
-                                      "verify_iat": False},
-                             audience="urn:exegol:wrapper",
-                             issuer=self.__key_handler.getSubject(), )
+        session = cast(SessionData, jwt.decode(self.__session,
+                                               self.__key_handler.getKey(),
+                                               algorithms=[self.__ALG],
+                                               options={"require": ["iat", "iss", "aud", "exp"],
+                                                        "verify_exp": False,
+                                                        "verify_iat": False},
+                                               audience="urn:exegol:wrapper",
+                                               issuer=self.__key_handler.getSubject(), ))
         self.__machine_id = session["machine_id"]
         self.__extract_from_session(session)
         self.__offline_mode = False
@@ -232,14 +232,15 @@ class SessionHandler(metaclass=MetaSingleton):
             logger.debug("Loading offline JWT session")
             offline_token = self.__get_offline_key_path().read_text()
             try:
-                offline_session: SessionOfflineData = jwt.decode(offline_token,
-                                             self.__key_handler.getKey(),
-                                             algorithms=[self.__ALG],
-                                             options={"require": ["iat", "iss", "aud", "exp", "nbf"],
-                                                      "verify_exp": True,
-                                                      "verify_iat": True},
-                                             audience="urn:exegol:offline-wrapper",
-                                             issuer=self.__key_handler.getSubject(), )
+                offline_session = cast(SessionOfflineData,
+                                       jwt.decode(offline_token,
+                                                  self.__key_handler.getKey(),
+                                                  algorithms=[self.__ALG],
+                                                  options={"require": ["iat", "iss", "aud", "exp", "nbf"],
+                                                           "verify_exp": True,
+                                                           "verify_iat": True},
+                                                  audience="urn:exegol:offline-wrapper",
+                                                  issuer=self.__key_handler.getSubject(), ))
                 if offline_session.get("activation_id") != LocalDatastore().get_activation_id() and offline_session.get("activation_id") != "*":
                     logger.debug(f"Mismatch activation id ({LocalDatastore().get_activation_id()}) in offline JWT session ({offline_session.get('activation_id')}).")
                     self.__offline_err_msg = "This offline license is not compatible with this machine. You can contact support if you need assistance."
