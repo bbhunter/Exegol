@@ -101,7 +101,7 @@ class SupabaseUtils:
         :param function_name: Function name to call (enum, activate, renew, registry_access, ...)
         :param body: Form (if any)
         :param auth_token: Session token (if any)
-        :param headers: Customer headers (if any)
+        :param headers: Custom headers (if any)
         :return:
         """
         if ParametersManager().offline_mode:

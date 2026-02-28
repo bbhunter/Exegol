@@ -192,7 +192,7 @@ class ContainerConfig:
         logger.debug(f"└── Load devices : {self.__devices}")
         extra_hosts = host_config.get("ExtraHosts", [])
         for entry in extra_hosts:
-            hostname, ip = entry.split(":")
+            hostname, ip = entry.rsplit(":", 1)
             self.setExtraHost(hostname, ip)
 
         # Volumes section
