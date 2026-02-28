@@ -9,7 +9,7 @@ from exegol.utils.ExeLog import logger
 
 
 class Start(Command, ContainerCreation, ContainerSpawnShell):
-    """Automatically create, start / resume and enter an Exegol container"""
+    """Automatically create, start, resume and enter an Exegol container"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -68,7 +68,7 @@ class Restart(Command, ContainerSelector, ContainerSpawnShell):
 
 
 class Install(Command, ImageSelector):
-    """Install Exegol image"""
+    """Install an Exegol image"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -113,7 +113,7 @@ class Build(Command, ImageSelector):
         self.groupArgs.append(GroupArg({"arg": self.build_profile, "required": False},
                                        {"arg": self.build_log, "required": False},
                                        {"arg": self.build_path, "required": False},
-                                       title="[bold cyan]Build[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Build[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Build an Exegol image [bright_black](interactive)[/bright_black]": "exegol build",
@@ -144,7 +144,7 @@ class Update(Command, ImageSelector):
         # Create group parameter for container selection
         self.groupArgs.append(GroupArg({"arg": self.skip_git, "required": False},
                                        {"arg": self.skip_images, "required": False},
-                                       title="[bold cyan]Update[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Update[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Update an Exegol image [bright_black](interactive)[/bright_black]": "exegol update",
@@ -157,7 +157,7 @@ class Update(Command, ImageSelector):
 
 
 class Upgrade(Command, ContainerMultiSelector):
-    """Upgrade an Exegol container"""
+    """Upgrade Exegol container(s)"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -183,7 +183,7 @@ class Upgrade(Command, ContainerMultiSelector):
         self.groupArgs.append(GroupArg({"arg": self.image_tag, "required": False},
                                        {"arg": self.no_backup, "required": False},
                                        {"arg": self.force_mode, "required": False},
-                                       title="[bold cyan]Upgrade[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Upgrade[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Upgrade an Exegol container [bright_black](interactive)[/bright_black]": "exegol upgrade",
@@ -199,7 +199,7 @@ class Upgrade(Command, ContainerMultiSelector):
 
 
 class Uninstall(Command, ImageMultiSelector):
-    """Remove Exegol [default not bold]image(s)[/default not bold]"""
+    """Uninstall Exegol image(s)"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -212,7 +212,7 @@ class Uninstall(Command, ImageMultiSelector):
 
         # Create group parameter for container selection
         self.groupArgs.append(GroupArg({"arg": self.force_mode, "required": False},
-                                       title="[bold cyan]Uninstall[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Uninstall[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Uninstall Exegol image(s) [bright_black](interactive)[/bright_black]": "exegol uninstall",
@@ -225,7 +225,7 @@ class Uninstall(Command, ImageMultiSelector):
 
 
 class Remove(Command, ContainerMultiSelector):
-    """Remove Exegol [default not bold]container(s)[/default not bold]"""
+    """Remove Exegol container(s)"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -238,7 +238,7 @@ class Remove(Command, ContainerMultiSelector):
 
         # Create group parameter for container selection
         self.groupArgs.append(GroupArg({"arg": self.force_mode, "required": False},
-                                       title="[bold cyan]Remove[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Remove[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Remove Exegol container(s) [bright_black](interactive)[/bright_black]": "exegol remove",
@@ -252,7 +252,7 @@ class Remove(Command, ContainerMultiSelector):
 
 
 class Exec(Command, ContainerCreation, ContainerStart):
-    """Execute a command on an Exegol container"""
+    """Execute a command in an Exegol container"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -301,7 +301,7 @@ class Exec(Command, ContainerCreation, ContainerStart):
                                        {"arg": self.exec, "required": False},
                                        {"arg": self.daemon, "required": False},
                                        {"arg": self.tmp, "required": False},
-                                       title="[bold cyan]Exec[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Exec[/bright_blue][blue]-only options[/blue]"))
 
         self._usages = {
             "Execute the [magenta]bloodhound[/magenta] command in the [blue]demo[/blue] container":
@@ -322,7 +322,7 @@ class Exec(Command, ContainerCreation, ContainerStart):
 
 
 class Info(Command, ContainerSelector):
-    """Show info on containers and images (local & remote)"""
+    """Show info on containers, images and user config"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -339,7 +339,7 @@ class Info(Command, ContainerSelector):
 
 
 class Activate(Command):
-    """Activate an exegol license"""
+    """Activate an Exegol license"""
 
     def __init__(self) -> None:
         Command.__init__(self)
@@ -372,14 +372,14 @@ class Activate(Command):
         self.groupArgs.append(GroupArg({"arg": self.revoke, "required": False},
                                        {"arg": self.api_key, "required": False},
                                        {"arg": self.license_id, "required": False},
-                                       title="[bold cyan]Activate[/bold cyan] [blue]specific options[/blue]"))
+                                       title="[bright_blue]Activate[/bright_blue][blue]-only options[/blue]"))
 
     def __call__(self, *args, **kwargs):
         return ExegolManager.activate
 
 
 class Version(Command):
-    """Print current Exegol version"""
+    """Show the current Exegol Wrapper version"""
 
     def __call__(self, *args, **kwargs):
         return None

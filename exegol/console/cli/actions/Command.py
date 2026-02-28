@@ -109,7 +109,7 @@ class Command:
                      {"arg": self.offline_mode, "required": False},
                      {"arg": self.accept_eula, "required": False},
                      {"arg": self.arch, "required": False},
-                     title="[blue]Optional arguments[/blue]",
+                     title="[bright_blue]Global[/bright_blue] [blue]arguments[/blue]",
                      is_global=True)
         ]
 
