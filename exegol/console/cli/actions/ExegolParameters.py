@@ -17,17 +17,15 @@ class Start(Command, ContainerCreation, ContainerSpawnShell):
         ContainerSpawnShell.__init__(self, self.groupArgs)
 
         self._usages = {
-            "Start interactively a container": "exegol start",
-            "Create a [blue]demo[/blue] container using [bright_blue]full[/bright_blue] image": "exegol start [blue]demo[/blue] [bright_blue]full[/bright_blue]",
-            "Spawn a shell from [blue]demo[/blue] container": "exegol start [blue]demo[/blue]",
-            "Create a container [blue]test[/blue] with a custom shared workspace": "exegol start [blue]test[/blue] [bright_blue]full[/bright_blue] -w [magenta]./project/pentest/[/magenta]",
-            "Create a container [blue]test[/blue] sharing the current working directory": "exegol start [blue]test[/blue] [bright_blue]full[/bright_blue] -cwd",
-            "Create a container [blue]htb[/blue] with a VPN": "exegol start [blue]htb[/blue] [bright_blue]full[/bright_blue] --vpn [magenta]~/vpn/[/magenta][bright_magenta]lab_Dramelac.ovpn[/bright_magenta]",
-            "Create a container [blue]app[/blue] with custom volume": "exegol start [blue]app[/blue] [bright_blue]full[/bright_blue] -V [bright_magenta]/var/app/[/bright_magenta]:[bright_magenta]/app/[/bright_magenta]",
-            "Create a container [blue]app[/blue] with custom volume in [blue]ReadOnly[/blue]": "exegol start [blue]app[/blue] [bright_blue]full[/bright_blue] -V [bright_magenta]/var/app/[/bright_magenta]:[bright_magenta]/app/[/bright_magenta]:[blue]ro[/blue]",
+            "Get started with Exegol [bright_black](interactive)[/bright_black]": "exegol start",
+            "Create the [blue]demo[/blue] container using the [bright_blue]full[/bright_blue] image": "exegol start [blue]demo[/blue] [bright_blue]full[/bright_blue]",
+            "Spawn a shell from the [blue]demo[/blue] container": "exegol start [blue]demo[/blue]",
+            "Create the [blue]app[/blue] container with the [green]full graphical desktop[/green]": "exegol start [blue]app[/blue] [bright_blue]full[/bright_blue] [green]--desktop[/green]",
+            "Create the [blue]test[/blue] container with a custom shared workspace": "exegol start [blue]test[/blue] [bright_blue]full[/bright_blue] -w [magenta]./project/pentest/[/magenta]",
+            "Create the [blue]htb[/blue] container with a VPN": "exegol start [blue]htb[/blue] [bright_blue]full[/bright_blue] --vpn [magenta]~/vpn/[/magenta][bright_magenta]lab_Dramelac.ovpn[/bright_magenta]",
             "Get a [blue]tmux[/blue] shell": "exegol start --shell [blue]tmux[/blue]",
-            "Share a specific [blue]hardware device[/blue] [bright_black](e.g. Proxmark)[/bright_black]": "exegol start -d /dev/ttyACM0",
-            "Share every [blue]USB device[/blue] connected to the host": "exegol start -d /dev/bus/usb/",
+            "Share a specific [blue]hardware device[/blue] [bright_black](e.g. Proxmark)[/bright_black]": "exegol start -d [bright_magenta]/dev/ttyACM0[/bright_magenta]",
+            "Share every [blue]USB device[/blue] connected to the host": "exegol start -d [magenta]/dev/bus/usb/[/magenta]",
         }
 
     def __call__(self, *args, **kwargs):
@@ -42,8 +40,8 @@ class Stop(Command, ContainerMultiSelector):
         ContainerMultiSelector.__init__(self, self.groupArgs)
 
         self._usages = {
-            "Stop interactively one or more containers": "exegol stop",
-            "Stop [blue]demo[/blue]": "exegol stop [blue]demo[/blue]"
+            "Stop container(s) [bright_black](interactive)[/bright_black]": "exegol stop",
+            "Stop the [blue]demo[/blue] container": "exegol stop [blue]demo[/blue]"
         }
 
     def __call__(self, *args, **kwargs):
@@ -60,8 +58,8 @@ class Restart(Command, ContainerSelector, ContainerSpawnShell):
         ContainerSpawnShell.__init__(self, self.groupArgs)
 
         self._usages = {
-            "Restart interactively one containers": "exegol restart",
-            "Restart [blue]demo[/blue]": "exegol restart [blue]demo[/blue]"
+            "Restart a container [bright_black](interactive)[/bright_black]": "exegol restart",
+            "Restart the [blue]demo[/blue] container": "exegol restart [blue]demo[/blue]"
         }
 
     def __call__(self, *args, **kwargs):
@@ -77,8 +75,8 @@ class Install(Command, ImageSelector):
         ImageSelector.__init__(self, self.groupArgs)
 
         self._usages = {
-            "Install interactively an exegol image": "exegol install",
-            "Install or update the [bright_blue]full[/bright_blue] image": "exegol install [bright_blue]full[/bright_blue]"
+            "Install an Exegol image [bright_black](interactive)[/bright_black]": "exegol install",
+            "Install the [bright_blue]full[/bright_blue] image [bright_black](unattended)[/bright_black]": "exegol install [bright_blue]full[/bright_blue] -F"
         }
 
     def __call__(self, *args, **kwargs):
@@ -118,9 +116,8 @@ class Build(Command, ImageSelector):
                                        title="[bold cyan]Build[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Build interactively an exegol image": "exegol build",
-            "Build interactively a local image named [blue]myimage[/blue]": "exegol build [blue]myimage[/blue]",
-            "Build the [blue]myimage[/blue] image based on the [bright_blue]full[/bright_blue] profile and log the operation": "exegol build [blue]myimage[/blue] [bright_blue]full[/bright_blue] --build-log /tmp/build.log",
+            "Build an Exegol image [bright_black](interactive)[/bright_black]": "exegol build",
+            "Build the [blue]myimage[/blue] image based on the [bright_blue]full[/bright_blue] profile, with logs": "exegol build [blue]myimage[/blue] [bright_blue]full[/bright_blue] --build-log /tmp/build.log",
         }
 
     def __call__(self, *args, **kwargs):
@@ -150,8 +147,8 @@ class Update(Command, ImageSelector):
                                        title="[bold cyan]Update[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Install or update interactively an exegol image": "exegol update",
-            "Install or update the [bright_blue]full[/bright_blue] image": "exegol update [bright_blue]full[/bright_blue]",
+            "Update an Exegol image [bright_black](interactive)[/bright_black]": "exegol update",
+            "Update the [bright_blue]full[/bright_blue] image": "exegol update [bright_blue]full[/bright_blue]",
         }
 
     def __call__(self, *args, **kwargs):
@@ -189,11 +186,11 @@ class Upgrade(Command, ContainerMultiSelector):
                                        title="[bold cyan]Upgrade[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Upgrade an exegol container": "exegol upgrade",
+            "Upgrade an Exegol container [bright_black](interactive)[/bright_black]": "exegol upgrade",
             "Upgrade the [blue]ctf[/blue] container": "exegol upgrade [blue]ctf[/blue]",
             "Upgrade the [blue]test[/blue] container to the [bright_blue]full[/bright_blue] image": "exegol upgrade --image [bright_blue]full[/bright_blue] [blue]test[/blue]",
-            "Upgrade [blue]lab[/blue] and [blue]test[/blue] containers without interactive user confirmation": "exegol upgrade -F [blue]lab[/blue] [blue]test[/blue]",
-            "Upgrade every outdated container": "exegol upgrade --all",
+            "Upgrade [blue]lab[/blue] and [blue]test[/blue] containers [bright_black](unattended)[/bright_black]": "exegol upgrade -F [blue]lab[/blue] [blue]test[/blue]",
+            "Upgrade all outdated containers": "exegol upgrade --all",
         }
 
     def __call__(self, *args, **kwargs):
@@ -218,8 +215,8 @@ class Uninstall(Command, ImageMultiSelector):
                                        title="[bold cyan]Uninstall[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Uninstall interactively one or more exegol images": "exegol uninstall",
-            "Uninstall the [bright_blue]dev[/bright_blue] image": "exegol uninstall [bright_blue]dev[/bright_blue]"
+            "Uninstall Exegol image(s) [bright_black](interactive)[/bright_black]": "exegol uninstall",
+            "Uninstall the [bright_blue]dev[/bright_blue] image [bright_black](unattended)[/bright_black]": "exegol uninstall [bright_blue]dev[/bright_blue] -F"
         }
 
     def __call__(self, *args, **kwargs):
@@ -244,8 +241,9 @@ class Remove(Command, ContainerMultiSelector):
                                        title="[bold cyan]Remove[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Remove interactively one or more containers": "exegol remove",
-            "Remove the [blue]demo[/blue] container": "exegol remove [blue]demo[/blue]"
+            "Remove Exegol container(s) [bright_black](interactive)[/bright_black]": "exegol remove",
+            "Remove the [blue]demo[/blue] container": "exegol remove [blue]demo[/blue]",
+            "Remove the [blue]demo[/blue] container [bright_black](unattended)[/bright_black]": "exegol remove [blue]demo[/blue] -F"
         }
 
     def __call__(self, *args, **kwargs):
@@ -306,18 +304,16 @@ class Exec(Command, ContainerCreation, ContainerStart):
                                        title="[bold cyan]Exec[/bold cyan] [blue]specific options[/blue]"))
 
         self._usages = {
-            "Execute the command [magenta]bloodhound[/magenta] in the container [blue]demo[/blue]":
+            "Execute the [magenta]bloodhound[/magenta] command in the [blue]demo[/blue] container":
                 "exegol exec [blue]demo[/blue] [magenta]bloodhound[/magenta]",
-            "Execute the command [magenta]'nmap -h'[/magenta] with console output":
-                "exegol exec -v [blue]demo[/blue] [magenta]'nmap -h'[/magenta]",
-            "Execute a command in [green]background[/green] within the [blue]demo[/blue] container":
+            "Execute the [magenta]'nmap -h'[/magenta] command, with [green]console output[/green]":
+                "exegol exec [green]-v[/green] [blue]demo[/blue] [magenta]'nmap -h'[/magenta]",
+            "Execute a command, in the [green]background[/green]":
                 "exegol exec [green]-b[/green] [blue]demo[/blue] [magenta]bloodhound[/magenta]",
-            "Execute the command [magenta]bloodhound[/magenta] in a temporary container based on the [bright_blue]full[/bright_blue] image":
-                "exegol exec --tmp [bright_blue]full[/bright_blue] [magenta]bloodhound[/magenta]",
-            "Execute a command in [green]background[/green] with a temporary container":
-                "exegol exec [green]-b[/green] --tmp [bright_blue]full[/bright_blue] [magenta]bloodhound[/magenta]",
-            "Execute the command [magenta]wireshark[/magenta] with [orange3]network admin[/orange3] privileged":
-                "exegol exec [green]-b[/green] --tmp --disable-my-resources --cap [orange3]NET_ADMIN[/orange3] [bright_blue]full[/bright_blue] [magenta]wireshark[/magenta]",
+            "Execute a command in a [green]temporary[/green] container based on the [bright_blue]full[/bright_blue] image":
+                "exegol exec [green]--tmp[/green] [bright_blue]full[/bright_blue] [magenta]bloodhound[/magenta]",
+            "Launch [magenta]wireshark[/magenta] in a container with [orange3]network admin[/orange3] privileges)":
+                "exegol exec -b --tmp --cap [orange3]NET_ADMIN[/orange3] [bright_blue]full[/bright_blue] [magenta]wireshark[/magenta]",
         }
 
     def __call__(self, *args, **kwargs):
@@ -333,11 +329,9 @@ class Info(Command, ContainerSelector):
         ContainerSelector.__init__(self, self.groupArgs)
 
         self._usages = {
-            "Print containers and images essentials information": "exegol info",
-            "Print the detailed configuration of the [blue]demo[/blue] container": "exegol info [blue]demo[/blue]",
-            "Print verbose information": "exegol info [yellow3]-v[/yellow3]",
-            "Print advanced information": "exegol info [yellow3]-vv[/yellow3]",
-            "Print debug information": "exegol info [yellow3]-vvv[/yellow3]"
+            "Show the essentials (images, containers)": "exegol info",
+            "User config file and verbose information": "exegol info -v",
+            "Config of the [blue]demo[/blue] container": "exegol info [blue]demo[/blue]",
         }
 
     def __call__(self, *args, **kwargs):
@@ -351,15 +345,16 @@ class Activate(Command):
         Command.__init__(self)
 
         self._usages = {
-            "Activate Exegol with a new license": "exegol activate",
-            "[blue]Revoke[/blue] an existing license": "exegol activate [blue]--revoke[/blue]"
+            "Activate Exegol [bright_black](interactive)[/bright_black]": "exegol activate",
+            "Revoke the current license": "exegol activate --revoke",
+            "Activate Exegol using an [green]API Key[/green] and a [green]license ID[/green] [bright_black](unattended)[/bright_black]": "exegol activate --accept-eula --api [green]API_KEY[/green] --license-id [green]LICENSE_ID[/green]",
         }
 
         self.revoke = Option("--revoke",
                              action="store_true",
                              dest="revoke",
                              help="Revoke your local Exegol license "
-                                  "(default: [red not italic]False[/red not italic])")
+                                  "(default: [bright_black]False[/bright_black])")
 
         self.api_key = Option("--api",
                               action="store",

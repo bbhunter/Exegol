@@ -71,7 +71,7 @@ class ContainerStart:
                                    default=[],
                                    choices={"NET_ADMIN", "NET_BROADCAST", "SYS_MODULE", "SYS_PTRACE", "SYS_RAWIO",
                                             "SYS_ADMIN", "LINUX_IMMUTABLE", "MAC_ADMIN", "SYSLOG", "ALL"},
-                                   help="[orange3](dangerous)[/orange3] Capabilities allow to add [orange3]specific[/orange3] privileges to the container "
+                                   help="[orange3](dangerous)[/orange3] Capabilities allow to add specific privileges to the container "
                                         "(e.g. need to mount volumes, perform low-level operations on the network, etc).")
 
         # Create group parameter for container options at start
@@ -97,7 +97,7 @@ class ContainerSpawnShell(ContainerStart):
                           dest="log",
                           action="store_true",
                           default=False,
-                          help="Enable shell logging (commands and outputs) on exegol to /workspace/logs/ (default: [red]Disabled[/red])")
+                          help="Enable shell logging (commands and outputs) on exegol to /workspace/logs/ (default: [bright_black]Disabled[/bright_black])")
         self.log_method = Option("--log-method",
                                  dest="log_method",
                                  action="store",
@@ -212,7 +212,7 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                       default=False,
                                       dest="update_fs_perms",
                                       help=f"Modifies the permissions of folders and sub-folders shared in your workspace to access the files created within the container using your host user account. "
-                                           f"(default: {'[green]Enabled[/green]' if UserConfig().auto_update_workspace_fs else '[red]Disabled[/red]'})")
+                                           f"(default: {'[green]Enabled[/green]' if UserConfig().auto_update_workspace_fs else '[bright_black]Disabled[/bright_black]'})")
         self.volumes = Option("-V", "--volume",
                               action="append",
                               default=[],
@@ -234,7 +234,7 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                  dest="privileged",
                                  action="store_true",
                                  default=False,
-                                 help="[orange3](dangerous)[/orange3] Give [red]ALL[/red] admin privileges to the container when it is created "
+                                 help="[red](dangerous)[/red] Give ALL admin privileges to the container when it is created "
                                       "(if the need is specifically identified, consider adding capabilities instead).")
         self.devices = Option("-d", "--device",
                               dest="devices",
@@ -292,7 +292,7 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                               dest="desktop",
                               action="store_true",
                               default=False,
-                              help=f"Enable or disable the Exegol desktop feature (default: {'[green]Enabled[/green]' if UserConfig().desktop_default_enable else '[red]Disabled[/red]'})")
+                              help=f"Enable or disable the Exegol desktop feature (default: {'[green]Enabled[/green]' if UserConfig().desktop_default_enable else '[bright_black]Disabled[/bright_black]'})")
         self.desktop_config = Option("--desktop-config",
                                      dest="desktop_config",
                                      default="",

@@ -46,17 +46,14 @@ class Command:
 
     def __init__(self) -> None:
         # Root command usages (can be overwritten by subclasses to display different use cases)
-        self._pre_usages = "[underline]To see specific examples run:[/underline][italic] exegol [cyan]command[/cyan] -h[/italic]"
+        self._pre_usages = ""
         self._usages = {
-            "Install an exegol image": "exegol install",
-            "Open an exegol shell": "exegol start",
-            "Show exegol images & containers": "exegol info",
-            "Update an image": "exegol update",
-            "See commands examples to execute": "exegol exec -h",
-            "Remove a container": "exegol remove",
-            "Uninstall an image": "exegol uninstall",
-            "Build a local exegol image": "exegol build",
-            "Stop a container": "exegol stop"
+            "Get specific help and examples (e.g. [bright_blue]start[/bright_blue])": "exegol [bright_blue]start[/bright_blue] -h",
+            "Show essential information (Exegol images & containers)": "exegol info",
+            "Install the [bright_blue]full[/bright_blue] image": "exegol install [bright_blue]full[/bright_blue]",
+            "Create a [blue]demo[/blue] container using the [bright_blue]full[/bright_blue] image and get a shell": "exegol start [blue]demo[/blue] [bright_blue]full[/bright_blue]",
+            "Create a container with the [green]full graphical desktop[/green]": "exegol start [blue]demo[/blue] [bright_blue]full[/bright_blue] [green]--desktop[/green]",
+            "Remove the [blue]demo[/blue] container": "exegol remove [blue]demo[/blue]",
         }
         self._post_usages = ""
 
@@ -91,7 +88,7 @@ class Command:
         self.offline_mode = Option("--offline",
                                    dest="offline_mode",
                                    action="store_true",
-                                   help=f"Run exegol in offline mode, no request will be made on internet (default: [red]Disable[/red])")
+                                   help=f"Run exegol in offline mode, no request will be made on internet (default: [bright_black]Disabled[/bright_black])")
         self.accept_eula = Option("--accept-eula",
                                   action="store_true",
                                   dest="accept_eula",
