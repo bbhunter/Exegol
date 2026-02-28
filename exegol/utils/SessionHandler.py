@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing import Queue
 from pathlib import Path
 from typing import Optional, Tuple, Type, Union, Set, cast
@@ -209,7 +209,7 @@ class SessionHandler(metaclass=MetaSingleton):
         Check last session refresh date
         :return: True if the session can be refreshed, False otherwise
         """
-        return self.__session_issue_date is None or (datetime.now() - self.__session_issue_date).seconds > 600
+        return self.__session_issue_date is None or datetime.now() > (self.__session_issue_date + timedelta(minutes=10))
 
     def __is_offline_capable(self) -> bool:
         """
@@ -553,6 +553,5 @@ class SessionHandler(metaclass=MetaSingleton):
 
     def remove_license(self) -> None:
         LocalDatastore().deactivate_license()
-        if self.__is_offline_capable():
-            self.__get_offline_key_path().unlink(missing_ok=True)
+        self.__get_offline_key_path().unlink(missing_ok=True)
         self.__is_enrolled = False
