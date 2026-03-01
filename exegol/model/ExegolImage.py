@@ -24,6 +24,7 @@ from exegol.utils.WebRegistryUtils import WebRegistryUtils
 
 class ExegolImage(SelectableInterface):
     """Class of an exegol image. Container every information about the docker image."""
+    UNKNOWN_STATUS = "Installed"
 
     class Filters(IntFlag):
         INSTALLED = enum_auto()
@@ -142,7 +143,7 @@ class ExegolImage(SelectableInterface):
                 self.__outdated = False
                 self.__version_specific = False
                 if not self.isLocal():
-                    self.setCustomStatus("[bright_black]Unmanaged[/bright_black]")  # Block auto-load function
+                    self.__setCustomStatus("[gold3]Unmanaged")  # Block auto-load function
                 else:
                     self.__is_update = True  # Local images cannot be updated
 
@@ -159,7 +160,7 @@ class ExegolImage(SelectableInterface):
             self.__version_specific = True
             if self.isLocal():
                 # Outdated image if retag by a more recent image or failed build
-                self.setCustomStatus("[orange3]Outdated local image[/orange3]")
+                self.__setCustomStatus("[orange3]Outdated local image")
         self.__setRealSize(self.__image.attrs["Size"])
         self.__entrypoint = self.__image.attrs.get("Config", {}).get("Entrypoint")
         # Set build date from labels
@@ -304,9 +305,9 @@ class ExegolImage(SelectableInterface):
                 not self.isUpToDate() and
                 not self.__is_discontinued and
                 not self.__outdated):
-            self.setCustomStatus("[bright_black]Unknown[/bright_black]")
-        elif "Unknown" in self.__custom_status:
-            self.setCustomStatus()
+            self.__setCustomStatus(f"[green]{self.UNKNOWN_STATUS}")
+        elif self.UNKNOWN_STATUS in self.__custom_status:
+            self.__setCustomStatus()
 
     def syncContainerData(self, container: Container) -> None:
         """Synchronization between the container and the image.
@@ -326,7 +327,7 @@ class ExegolImage(SelectableInterface):
 
     async def autoLoad(self, from_cache: bool = True) -> 'ExegolImage':
         """If the current image is in an unknown state, it's possible to load remote data specifically."""
-        if "Unknown" in self.__custom_status and \
+        if self.UNKNOWN_STATUS in self.__custom_status and \
                 not self.isVersionSpecific() and \
                 "N/A" in self.__profile_version and \
                 not ParametersManager().offline_mode:
@@ -360,7 +361,7 @@ class ExegolImage(SelectableInterface):
                     # Fallback to version matching
                     self.__is_update = self.__is_update or self.__image_version == version
             if version or remote_digest:
-                self.setCustomStatus()
+                self.__setCustomStatus()
         return self
 
     def updateCheck(self) -> Optional[str]:
@@ -557,7 +558,7 @@ class ExegolImage(SelectableInterface):
     def __repr__(self) -> str:
         return re.sub(r"(\[/?[^]]+])", '', str(self)).replace(':arrow_right:', '->')
 
-    def setCustomStatus(self, status: str = "") -> None:
+    def __setCustomStatus(self, status: str = "") -> None:
         """Manual image's status overwrite"""
         self.__custom_status = status
 
@@ -568,7 +569,10 @@ class ExegolImage(SelectableInterface):
         The status update available always print his version because the latest version is not print elsewhere."""
         image_version = '' if (not include_version) or 'N/A' in self.getImageVersion() else f' (v.{self.getImageVersion()})'
         if self.__custom_status != "":
-            return self.__custom_status
+            status = self.__custom_status + image_version
+            if "[/" not in status:
+                status += "[/]"
+            return status
         elif not self.__is_remote:
             return "[blue]Local image[/blue]"
         elif self.__outdated and self.__is_install:

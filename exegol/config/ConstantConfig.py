@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-__version__ = "5.1.8"
+__version__ = "5.1.9"
 
 
 class ConstantConfig:

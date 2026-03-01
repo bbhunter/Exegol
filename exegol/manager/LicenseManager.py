@@ -1,4 +1,5 @@
 import platform
+import re
 import time
 from time import sleep
 from typing import Dict, Optional, cast, Tuple
@@ -35,8 +36,8 @@ class LicenseManager:
             cls.__singleton_instance = cls()
             if not LocalDatastore().is_eula_accepted():
                 await cls.__singleton_instance.eula_process()
-                # For non-interactive commands skip first-time activation
-                if not ParametersManager().accept_eula:
+                # For non-interactive commands skip first-time activation (or activation action)
+                if not ParametersManager().accept_eula and ParametersManager().getCurrentActionName() != "activate":
                     await cls.__singleton_instance.activate_exegol()
                 else:
                     cls.__singleton_instance.__session.display_license()
@@ -53,15 +54,25 @@ class LicenseManager:
         LocalDatastore().update_eula(True)
 
     async def activate_exegol(self, skip_prompt: bool = False) -> None:
+        if skip_prompt and ParametersManager().api_key:
+            await self.__api_activation()
         # Do you want to activate your Exegol?
-        if skip_prompt or await ExegolRich.Confirm("Do you want to activate your Exegol subscription now?", default=False):
-            try:
-                if await self.enroll_machine():
-                    await self.__session.reload_session()
-            except KeyboardInterrupt as e:
-                if self.__user_session is not None:
-                    await self.__user_session.auth.sign_out({"scope": "local"})
-                raise e
+        elif skip_prompt or await ExegolRich.Confirm("Do you want to activate your Exegol subscription now?", default=False):
+            if ParametersManager().offline_mode:
+                logger.info("If you have an offline license, you can generate an exegol license from the exegol web dashboard and activate your wrapper.")
+                logger.info(f"Activation ID of your current machine: [green]{MUID.get_activation_id()[:4]}-{MUID.get_activation_id()[4:]}[/green]")
+                return
+            else:
+                try:
+                    await self.__interactive_activation()
+                except KeyboardInterrupt as e:
+                    if self.__user_session is not None:
+                        try:
+                            await self.__user_session.auth.sign_out({"scope": "local"})
+                        except Exception:
+                            # Skip connection errors during logout
+                            pass
+                    raise e
         else:
             LocalDatastore().update_eula(False)
             logger.warning("[green]Community[/green] plan (i.e., free) is strictly limited to personal, non-commercial, educational, or research purposes.")
@@ -81,7 +92,7 @@ class LicenseManager:
             logger.warning("If you've recently enrolled this machine, you [red]won't[/red] be able to reuse this license immediately on another machine.")
             if await ExegolRich.Confirm("Are you sure you want to revoke your license locally?", default=False):
                 await TaskManager.wait_for(TaskManager.TaskId.LoadLicense, clean_task=False)
-                LocalDatastore().deactivate_license()
+                self.__session.remove_license()
                 logger.success("Exegol license successfully revoked.")
         else:
             logger.info("You don't have an active license to revoke.")
@@ -98,7 +109,19 @@ class LicenseManager:
                 markdown = Markdown(f.read())
             ExeLog.console.print(markdown)
 
-    async def enroll_machine(self) -> bool:
+    async def __api_activation(self) -> None:
+        license_id = ParametersManager().license_id
+        if license_id is None:
+            logger.critical("API activation requires a valid license ID")
+        logger.info("Activation using API Key")
+        if not re.search(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", license_id, re.IGNORECASE):
+            logger.critical("The license ID provided is not in a valid format.")
+        try:
+            await self.__activation(license_id, revoke_previous_machine=True, api_key=ParametersManager().api_key)
+        except CancelOperation:
+            logger.critical("Exegol activation failed")
+
+    async def __interactive_activation(self) -> bool:
         # Login
         self.__user_session = await SupabaseUtils.login_user()
         # Enum license
@@ -121,6 +144,11 @@ class LicenseManager:
             current_license["valid_until"] = get_display_date(current_license["valid_until"])
             if current_license["last_seen"]:
                 current_license["last_seen"] = get_display_date(current_license["last_seen"])
+            features = current_license.get("features")
+            if features is not None:
+                current_license["type"] += f" ({', '.join(features)})"
+            if "features" in current_license:
+                current_license.pop("features")
             table_data[str(i)] = current_license
             id_match[str(i)] = current_id
 
@@ -140,37 +168,57 @@ class LicenseManager:
                 raise CancelOperation
             try:
                 # Check if the license type is known to the wrapper
-                LicenseType[selected_license.get("type", "Unknown")]
+                LicenseType[selected_license.get("type", "Unknown").split()[0]]
             except KeyError as e:
                 logger.critical("This license type is not supported the current version of the wrapper. Please update your wrapper first.")
                 raise e
+
             try:
-                current_os = EnvInfo.getHostOs().value.lower()
-            except RuntimeError:
-                # Fallback mthd if docker not yet init
-                current_os = platform.system().lower()
-                if current_os == "darwin":
-                    current_os = "Mac"
-            # Enroll
-            enroll_form: EnrollmentForm = {
-                "machine_id": MUID.get_current_muid(),
-                "machine_name": platform.node(),
-                "machine_os": current_os,
-                "license_id": id_match[selected_license_id],
-            }
-            if revoke_previous_machine:
-                enroll_form["revoke_previous_machine"] = True
-            try:
-                enrollment_response: LicenseEnrollment = await SupabaseUtils.activate_licenses(self.__user_session.functions, enroll_form)
-                # Save license session
-                if enrollment_response.get("next_token") is not None:
-                    LocalDatastore().set(LocalDatastore.Key.TOKEN, enrollment_response.get("next_token"))
-                    LocalDatastore().set(LocalDatastore.Key.SESSION, enrollment_response.get("session"))
-                else:
-                    raise NotImplementedError
-                logger.success("Exegol successfully activated!")
-                await self.__user_session.auth.sign_out({"scope": "local"})
+                await self.__activation(id_match[selected_license_id], revoke_previous_machine)
+                try:
+                    await self.__user_session.auth.sign_out({"scope": "local"})
+                except Exception:
+                    # Skip connection errors during logout
+                    pass
                 return True
             except CancelOperation:
                 selected_license_id = None
                 time.sleep(2)
+
+    async def __activation(self, license_id: str, revoke_previous_machine: bool = False, api_key: Optional[str] = None) -> None:
+        try:
+            current_os = EnvInfo.getHostOs().value.lower()
+        except RuntimeError:
+            # Fallback mthd if docker not yet init
+            current_os = platform.system().lower()
+            if current_os == "darwin":
+                current_os = "mac"
+        hostname = platform.node()
+        if not hostname.strip():
+            import os
+            hostname = os.environ.get("HOSTNAME", "unknown")
+        if not hostname.strip():
+            hostname = "unknown"
+        # Enroll
+        enroll_form: EnrollmentForm = {
+            "machine_id": MUID.get_current_muid(),
+            "machine_name": hostname,
+            "machine_os": current_os,
+            "license_id": license_id,
+            "activation_id": MUID.get_activation_id()
+        }
+        if revoke_previous_machine:
+            enroll_form["revoke_previous_machine"] = True
+        client = self.__user_session.functions if self.__user_session else None
+        enrollment_response: LicenseEnrollment = await SupabaseUtils.activate_licenses(client, enroll_form, api_key)
+        # Save license session
+        if enrollment_response.get("next_token") is not None:
+            LocalDatastore().set(LocalDatastore.Key.TOKEN, enrollment_response.get("next_token"))
+            LocalDatastore().set(LocalDatastore.Key.SESSION, enrollment_response.get("session"))
+        else:
+            logger.critical("An unknown error occurred during activation. Contact support for assistance.")
+        offline_session = enrollment_response.get("offline_session")
+        if offline_session is not None:
+            self.__session.save_offline_session(offline_session)
+        await self.__session.reload_session()
+        logger.success("Exegol successfully activated!")

@@ -9,6 +9,9 @@ class LicenseType(Enum):
     Professional = 1
     Enterprise = 2
 
+# Features
+class LicenseFeature(Enum):
+    Offline = 0
 
 # Form data
 class EnrollmentForm(TypedDict):
@@ -17,11 +20,12 @@ class EnrollmentForm(TypedDict):
     machine_os: str
     license_id: str
     revoke_previous_machine: NotRequired[bool]
-
+    activation_id: str
 
 # Response data
 class LicensesEnumeration(TypedDict):
     type: str
+    features: NotRequired[Optional[list[str]]]
     valid_until: str
     organization: str
     enrolled_on: str
@@ -39,12 +43,22 @@ class LicenseSession(TypedDict):
 class LicenseEnrollment(TypedDict):
     next_token: str
     session: str
+    offline_session: Optional[str]
 
 
-class SessionData(TypedDict):
-    machine_id: str
+class SessionDefaultData(TypedDict):
     license: str
+    features: Optional[list[str]]
     license_id: str
     license_owner: str
+    user_id: str
     username: str
-    expiration_date: str
+    expiration_date: int
+    exp: int
+    iat: int
+
+class SessionData(SessionDefaultData):
+    machine_id: str
+
+class SessionOfflineData(SessionDefaultData):
+    activation_id: str

@@ -534,7 +534,7 @@ class ExegolManager:
         # Recap
         await ExegolTUI.printContainerRecap(model)
         if cls.__interactive_mode:
-            if not model.image.isUpToDate() and "Unknown" not in model.image.getStatus() and \
+            if not model.image.isUpToDate() and ExegolImage.UNKNOWN_STATUS not in model.image.getStatus() and \
                     await ExegolRich.Confirm("Do you want to [green]update[/green] the selected image?", False):
                 image = await UpdateManager.updateImage(model.image.getName())
                 if image is not None:
@@ -614,7 +614,7 @@ class ExegolManager:
 
             # Check update conditions
             if not c.image.isLocked():
-                if "Unknown" in c.image.getStatus():
+                if ExegolImage.UNKNOWN_STATUS in c.image.getStatus():
                     await c.image.autoLoad()
                 if c.image.isUpToDate():
                     logger.error(f"Container [green]{c.name}[/green] is already using the latest version of [blue]{current_image_tag}[/blue]. No need to upgrade, skipping.")

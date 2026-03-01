@@ -59,7 +59,7 @@ class ContainerStart:
                            action="append",
                            default=[],
                            dest="envs",
-                           help="And an environment variable on Exegol (format: --env KEY=value). The variables "
+                           help="Add an environment variable on Exegol (format: --env KEY=value). The variables "
                                 "configured during the creation of the container will be persistent in all shells. "
                                 "If the container already exists, the variable will be present only in the current shell",
                            completer=EnvironCompleter)
@@ -71,13 +71,13 @@ class ContainerStart:
                                    default=[],
                                    choices={"NET_ADMIN", "NET_BROADCAST", "SYS_MODULE", "SYS_PTRACE", "SYS_RAWIO",
                                             "SYS_ADMIN", "LINUX_IMMUTABLE", "MAC_ADMIN", "SYSLOG", "ALL"},
-                                   help="[orange3](dangerous)[/orange3] Capabilities allow to add [orange3]specific[/orange3] privileges to the container "
+                                   help="[orange3](dangerous)[/orange3] Capabilities allow to add specific privileges to the container "
                                         "(e.g. need to mount volumes, perform low-level operations on the network, etc).")
 
         # Create group parameter for container options at start
         groupArgs.append(GroupArg({"arg": self.envs, "required": False},
                                   {"arg": self.capabilities, "required": False},
-                                  title=f"[blue]Container creation or start options[/blue]"))
+                                  title=f"[blue]Container options[/blue] [bright_blue]at creation or start[/bright_blue]"))
 
 
 class ContainerSpawnShell(ContainerStart):
@@ -97,7 +97,7 @@ class ContainerSpawnShell(ContainerStart):
                           dest="log",
                           action="store_true",
                           default=False,
-                          help="Enable shell logging (commands and outputs) on exegol to /workspace/logs/ (default: [red]Disabled[/red])")
+                          help="Enable shell logging (commands and outputs) on exegol to /workspace/logs/ (default: [bright_black]Disabled[/bright_black])")
         self.log_method = Option("--log-method",
                                  dest="log_method",
                                  action="store",
@@ -114,13 +114,13 @@ class ContainerSpawnShell(ContainerStart):
         groupArgs.append(GroupArg({"arg": self.log, "required": False},
                                   {"arg": self.log_method, "required": False},
                                   {"arg": self.log_compress, "required": False},
-                                  title="[blue]Container shell logging options[/blue]"))
+                                  title="[bright_blue]Shell logging[/bright_blue][blue] options[/blue]"))
 
         ContainerStart.__init__(self, groupArgs)
 
         # Create group parameter for container selection
         groupArgs.append(GroupArg({"arg": self.shell, "required": False},
-                                  title="[bold cyan]Start[/bold cyan] [blue]specific options[/blue]"))
+                                  title="[bright_blue]Start[/bright_blue] [blue]specific options[/blue]"))
 
 
 class ImageSelector:
@@ -212,7 +212,7 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                       default=False,
                                       dest="update_fs_perms",
                                       help=f"Modifies the permissions of folders and sub-folders shared in your workspace to access the files created within the container using your host user account. "
-                                           f"(default: {'[green]Enabled[/green]' if UserConfig().auto_update_workspace_fs else '[red]Disabled[/red]'})")
+                                           f"(default: {'[green]Enabled[/green]' if UserConfig().auto_update_workspace_fs else '[bright_black]Disabled[/bright_black]'})")
         self.volumes = Option("-V", "--volume",
                               action="append",
                               default=[],
@@ -234,13 +234,20 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                  dest="privileged",
                                  action="store_true",
                                  default=False,
-                                 help="[orange3](dangerous)[/orange3] Give [red]ALL[/red] admin privileges to the container when it is created "
+                                 help="[red](dangerous)[/red] Give ALL admin privileges to the container when it is created "
                                       "(if the need is specifically identified, consider adding capabilities instead).")
         self.devices = Option("-d", "--device",
                               dest="devices",
                               default=[],
                               action="append",
                               help="Add host [default not bold]device(s)[/default not bold] at the container creation (example: -d /dev/ttyACM0 -d /dev/bus/usb/)")
+
+        self.hosts_file = Option("--hosts-file",
+                        dest="hosts_file",
+                        metavar="HOSTS_FILE",
+                        action="store",
+                        help="Import custom host entries from a file (format: IP HOSTNAME)",
+                        completer=FilesCompleter())
 
         self.comment = Option("--comment",
                               dest="comment",
@@ -262,7 +269,8 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                   {"arg": self.network, "required": False},
                                   {"arg": self.share_timezone, "required": False},
                                   {"arg": self.comment, "required": False},
-                                  title="[blue]Container creation options[/blue]"))
+                                  {"arg": self.hosts_file, "required": False},
+                                  title="[blue]Container options[/blue] [bright_blue]at creation only[/bright_blue]"))
 
         self.vpn = Option("--vpn",
                           dest="vpn",
@@ -278,13 +286,13 @@ class ContainerCreation(ContainerSelector, ImageSelector):
 
         groupArgs.append(GroupArg({"arg": self.vpn, "required": False},
                                   {"arg": self.vpn_auth, "required": False},
-                                  title="[blue]Container creation VPN options[/blue]"))
+                                  title="[bright_blue]VPN[/bright_blue][blue] options (at creation only)[/blue]"))
 
         self.desktop = Option("--desktop",
                               dest="desktop",
                               action="store_true",
                               default=False,
-                              help=f"Enable or disable the Exegol desktop feature (default: {'[green]Enabled[/green]' if UserConfig().desktop_default_enable else '[red]Disabled[/red]'})")
+                              help=f"Enable or disable the Exegol desktop feature (default: {'[green]Enabled[/green]' if UserConfig().desktop_default_enable else '[bright_black]Disabled[/bright_black]'})")
         self.desktop_config = Option("--desktop-config",
                                      dest="desktop_config",
                                      default="",
@@ -295,4 +303,4 @@ class ContainerCreation(ContainerSelector, ImageSelector):
                                      completer=DesktopConfigCompleter)
         groupArgs.append(GroupArg({"arg": self.desktop, "required": False},
                                   {"arg": self.desktop_config, "required": False},
-                                  title="[blue]Container creation Desktop options[/blue]"))
+                                  title="[bright_blue]Desktop[/bright_blue][blue] options (at creation only)[/blue]"))

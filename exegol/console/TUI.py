@@ -444,6 +444,7 @@ class ExegolTUI:
         """
         # Fetch data
         devices = container.config.getTextDevices(logger.isEnabledFor(ExeLog.VERBOSE))
+        hosts = container.config.getTextExtraHosts(logger.isEnabledFor(ExeLog.VERBOSE))
         envs = container.config.getTextEnvs(logger.isEnabledFor(ExeLog.VERBOSE))
         ports = container.config.getTextPorts(is_running=container.isRunning() if type(container) is ExegolContainer else True)
         sysctls = container.config.getSysctls()
@@ -468,7 +469,7 @@ class ExegolTUI:
                                  f"{container.image.getName()}")
         if "N/A" not in container.image.getImageVersion():
             container_info_header += f" - v.{container.image.getImageVersion()}"
-        if "Unknown" not in container.image.getStatus():
+        if ExegolImage.UNKNOWN_STATUS not in container.image.getStatus():
             container_info_header += f" ({container.image.getStatus(include_version=False)})"
         if container.image.getArch().split('/')[0] != EnvInfo.arch or logger.isEnabledFor(ExeLog.VERBOSE):
             color = ConsoleFormat.getArchColor(container.image.getArch())
@@ -504,6 +505,8 @@ class ExegolTUI:
             recap.add_row("[bold blue]Workspace[/bold blue]", '[bright_magenta]Dedicated[/bright_magenta] [bright_black](/workspace)[/bright_black]')
         if len(devices) > 0:
             recap.add_row("[bold blue]Devices[/bold blue]", devices.strip())
+        if len(hosts) > 0:
+            recap.add_row("[bold blue]Hosts[/bold blue]", hosts.strip())
         if len(envs) > 0:
             recap.add_row("[bold blue]Envs[/bold blue]", envs.strip())
         if len(ports) > 0:

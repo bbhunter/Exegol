@@ -90,7 +90,7 @@ class SupabaseUtils:
 
     @classmethod
     async def __call_licenses_endpoint(cls, supabase_client: AsyncFunctionsClient, function_name: LicenseAction,
-                                       body: Optional[Dict] = None, auth_token: Optional[str] = None) -> Dict:
+                                       body: Optional[Dict] = None, auth_token: Optional[str] = None, headers: Optional[Dict[str, str]] = None) -> Dict:
         """
         This function raises the following exception that should be caught accordingly:
             - FunctionsRelayError (supabase error)
@@ -101,12 +101,17 @@ class SupabaseUtils:
         :param function_name: Function name to call (enum, activate, renew, registry_access, ...)
         :param body: Form (if any)
         :param auth_token: Session token (if any)
+        :param headers: Custom headers (if any)
         :return:
         """
         if ParametersManager().offline_mode:
             # This check must be made before
             raise NotImplementedError
-        headers: Dict[str, str] = {"app-action": function_name.value}
+        if headers is None:
+            headers = {}
+        else:
+            headers = headers.copy()
+        headers["app-action"] = function_name.value
         options: Dict[str, Union[str, Dict]] = {"headers": headers}
         if function_name != cls.LicenseAction.GetCertificate:
             options["responseType"] = "json"
@@ -206,11 +211,16 @@ class SupabaseUtils:
             raise e
 
     @classmethod
-    async def activate_licenses(cls, supabase_client: AsyncFunctionsClient, form: EnrollmentForm) -> LicenseEnrollment:
+    async def activate_licenses(cls, supabase_client: Optional[AsyncFunctionsClient], form: EnrollmentForm, api_key: Optional[str] = None) -> LicenseEnrollment:
         if ParametersManager().offline_mode:
             logger.critical("You can't activate Exegol without Internet access.")
+        if supabase_client is None:
+            supabase_client = (await cls.__create_client()).functions
+        custom_headers = {}
+        if api_key is not None:
+            custom_headers["app-api-key"] = api_key
         try:
-            return cast(LicenseEnrollment, await cls.__call_licenses_endpoint(supabase_client, cls.LicenseAction.LicenseActivation, cast(dict, form)))
+            return cast(LicenseEnrollment, await cls.__call_licenses_endpoint(supabase_client, cls.LicenseAction.LicenseActivation, cast(dict, form), headers=custom_headers))
         except ConnectError:
             logger.error("Exegol license server can't be reached without Internet access.")
             raise CancelOperation
@@ -226,6 +236,8 @@ class SupabaseUtils:
                     logger.error("Exegol license server seems to be unavailable for now. Check if your exegol is up-to-date and retry.")
                 else:
                     logger.error(f"An error occurred when activating Exegol: {e.message}")
+            elif e.status == 403 and api_key is not None:
+                logger.error("Invalid API key provided. Please check your configuration and retry.")
             elif e.status in [403, 503, 504, 546]:
                 logger.error(f"The license server is currently unavailable. Please try again later.")
                 logger.debug(f"Error code [{e.status}] {e}")
@@ -258,7 +270,7 @@ class SupabaseUtils:
             logger.error(f"An unknown error occurred when renewing session: [{e.status}] {e.message}")
 
     @classmethod
-    async def rotate_token(cls, form: dict) -> str:
+    async def rotate_token(cls, form: dict, show_connection_error: bool) -> str:
         if ParametersManager().offline_mode:
             raise LicenseToleration
         try:
@@ -270,11 +282,13 @@ class SupabaseUtils:
                 raise FunctionsRelayError("Received an empty response from license server.")
             return token
         except ConnectError:
-            logger.error("Exegol license server can't be reached without Internet access")
+            if show_connection_error:
+                logger.error("Exegol license server can't be reached without Internet access")
             raise LicenseToleration
         except (FunctionsRelayError, TransportError) as e:
             # Error during http request
-            logger.debug(f"Error during session refresh. Network error, retry later: {e}")
+            if show_connection_error:
+                logger.debug(f"Error during session refresh. Network error, retry later: {e}")
             raise LicenseToleration
         except FunctionsHttpError as e:
             cls.__handle_session_error(e)
@@ -338,7 +352,7 @@ class SupabaseUtils:
     @classmethod
     async def list_all_images(cls, arch: str) -> List[SupabaseImage]:
         if ParametersManager().offline_mode:
-            logger.warning("Can't list images without Internet access. Skipping.")
+            logger.warning("Can't list online images without Internet access. Skipping.")
             return []
         logger.debug(f"Listing images from metadata table")
         image_list = await cls.__execute((await cls.__create_client())

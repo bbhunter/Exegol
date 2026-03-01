@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         os: [win32, linux, darwin]
     steps:
       - uses: actions/checkout@main
@@ -54,7 +54,7 @@ jobs:
 #    runs-on: ${{ matrix.os }}
 #    strategy:
 #      matrix:
-#        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+#        python-version: [ '3.10', '3.11', '3.12', '3.13' ]
 #        os: [ ubuntu-latest, macOS-latest, windows-latest ]
 #
 #    steps:

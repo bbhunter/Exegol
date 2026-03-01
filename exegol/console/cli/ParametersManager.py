@@ -32,6 +32,9 @@ class ParametersManager(metaclass=MetaSingleton):
             parser.print_help()
             exit(0)
 
+    def getCurrentActionName(self) -> str:
+        return self.parameters.name
+
     def getCurrentAction(self) -> Command:
         """Return the object corresponding to the action selected by the user"""
         return self.parameters

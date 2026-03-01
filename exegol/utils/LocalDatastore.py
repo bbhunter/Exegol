@@ -19,6 +19,7 @@ class LocalDatastore(metaclass=MetaSingleton):
         SESSION_CERT = 1
         TOKEN = 2
         SESSION = 3
+        ACTIVATION_ID = 4
 
     def __init__(self) -> None:
 
@@ -116,6 +117,12 @@ class LocalDatastore(metaclass=MetaSingleton):
                 logger.error("DB error during: Updating DB MID")
                 self.__db.rollback()
                 raise e
+
+    def get_activation_id(self) -> Optional[str]:
+        act_id = self.get(self.Key.ACTIVATION_ID)
+        if type(act_id) is bytes:
+            act_id = act_id.decode("utf-8")
+        return cast(Optional[str], act_id)
 
     # KV SECTION
     def get(self, key: Key) -> Optional[Union[str, bytes]]:

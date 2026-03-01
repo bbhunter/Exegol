@@ -655,7 +655,7 @@ class DockerUtils(metaclass=MetaSingleton):
         if ParametersManager().offline_mode:
             logger.critical("It's not possible to download a docker image in offline mode ...")
             return False
-        if "Unknown" in image.getStatus():
+        if ExegolImage.UNKNOWN_STATUS in image.getStatus():
             logger.warning("This image cannot be downloaded at this time. Please try again later.")
             return False
         auth_config: Optional[dict] = None
