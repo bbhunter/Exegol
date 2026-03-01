@@ -251,9 +251,9 @@ class SessionHandler(metaclass=MetaSingleton):
                 self.__offline_err_msg = f"Offline license has expired. Please renew it from your exegol dashboard and replace the license key file: [magenta]{self.__get_offline_key_path()}[/magenta]"
             except jwt.ImmatureSignatureError:
                 self.__offline_err_msg = f"The machine local date/time might be incorrect. Please check and synchronize the time difference and contact support if the problem persists."
-            except (jwt.InvalidIssuerError, jwt.MissingRequiredClaimError):
+            except (jwt.InvalidIssuerError, jwt.MissingRequiredClaimError, jwt.InvalidSignatureError):
                 self.__offline_err_msg = f"This version of the wrapper is too old and does not support this new license. Please update your wrapper before using your license. You can contact support if you need assistance."
-            except (jwt.InvalidAlgorithmError, jwt.InvalidAudienceError, jwt.InvalidSignatureError):
+            except (jwt.InvalidAlgorithmError, jwt.InvalidAudienceError):
                 logger.critical(":(")
             except jwt.InvalidTokenError as e:
                 self.__offline_err_msg = f"An unknown error occurred while verifying the Exegol Offline license ({e.__class__.__name__}: {e}). Please contact support for assistance."

@@ -109,6 +109,8 @@ class SupabaseUtils:
             raise NotImplementedError
         if headers is None:
             headers = {}
+        else:
+            headers = headers.copy()
         headers["app-action"] = function_name.value
         options: Dict[str, Union[str, Dict]] = {"headers": headers}
         if function_name != cls.LicenseAction.GetCertificate:
