@@ -442,6 +442,7 @@ class ExegolTUI:
         :param container: The container to fetch config from
         :return: A rich table fully built
         """
+        streamer_mode = os.getenv("EXEGOL_STREAMER_MODE") is not None
         # Fetch data
         devices = container.config.getTextDevices(logger.isEnabledFor(ExeLog.VERBOSE))
         hosts = container.config.getTextExtraHosts(logger.isEnabledFor(ExeLog.VERBOSE))
@@ -452,7 +453,7 @@ class ExegolTUI:
         volumes = container.config.getTextMounts(logger.isEnabledFor(ExeLog.VERBOSE))
         creation_date = container.config.getTextCreationDate()
         comment = container.config.getComment()
-        passwd = container.config.getPasswd()
+        passwd = '<REDACTED>' if streamer_mode else container.config.getPasswd()
 
         # Color code
         privilege_color = "bright_magenta"
@@ -480,7 +481,7 @@ class ExegolTUI:
             recap.add_row("[bold blue]Comment[/bold blue]", comment)
         if passwd:
             recap.add_row(f"[bold blue]Credentials[/bold blue]", f"[deep_sky_blue3]{container.config.getUsername()}[/deep_sky_blue3] : [deep_sky_blue3]{passwd}[/deep_sky_blue3]")
-        recap.add_row("[bold blue]Remote Desktop[/bold blue]", container.config.getDesktopConfig())
+        recap.add_row("[bold blue]Remote Desktop[/bold blue]", '<REDACTED>' if streamer_mode and container.config.isDesktopEnabled() else container.config.getDesktopConfig())
         if creation_date:
             recap.add_row("[bold blue]Creation date[/bold blue]", creation_date)
         recap.add_row("[bold blue]Console GUI[/bold blue]", boolFormatter(container.config.isGUIEnable()) + container.config.getTextGuiSockets())
