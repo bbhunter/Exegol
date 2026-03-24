@@ -71,6 +71,8 @@ class ExegolImage(SelectableInterface):
         self.__dl_size: str = "[bright_black]N/A[/bright_black]"
         # Local uncompressed image's size
         self.__disk_size: str = "[bright_black]N/A[/bright_black]"
+        # WORKAROUND_DOCKER_SIZE_SIZEONDISK: raw Docker size (bytes as str) for sanity check / fallback
+        self.__disk_size_bytes: Optional[int] = None
         # Remote image ID
         self.__digest: str = "[bright_black]N/A[/bright_black]"
         # Local docker image ID
@@ -197,6 +199,7 @@ class ExegolImage(SelectableInterface):
         self.__image_id = "Reset"
         self.__build_date = ""
         self.__disk_size = "[bright_black]N/A[/bright_black]"
+        self.__disk_size_bytes = None
 
     def setDockerObject(self, docker_image: Image) -> None:
         """Docker object setter. Parse object to set up self configuration."""
@@ -659,14 +662,71 @@ class ExegolImage(SelectableInterface):
     def __setRealSize(self, value: int) -> None:
         """On-Disk image size setter"""
         self.__disk_size = self.__processSize(value)
+        self.__disk_size_bytes = value
+
+    # --- WORKAROUND_DOCKER_SIZE_SIZEONDISK: fallback when Docker reports wrong on-disk size ---
+    # Minimum expected size (GB) per official tag; fallback when Docker reports below this. Remove when Docker fix is upstream.
+    __SIZE_MIN_GB: Dict[str, int] = {
+        "free": 35,
+        "full": 37,
+        "light": 11,
+        "web": 15,
+        "osint": 8,
+        "ad": 25,
+        "nightly": 38
+    }
+    __ESTIMATED_SIZE_GB: Dict[str, int] = {
+        "free": 42,
+        "full": 41,
+        "light": 14,
+        "web": 19,
+        "osint": 11,
+        "ad": 28,
+        "nightly": 41
+    }
+    __size_fallback_warning_emitted: bool = False
+
+    def __get_estimated_size_display(self) -> str:
+        """Estimated size string when fallback is used (~value GB)."""
+        est = self.__ESTIMATED_SIZE_GB.get(self.__name.split('-')[0])
+        if est is None:
+            return "~? GB"
+        return f"~{est} GB"
+
+    def __should_fallback_size(self) -> bool:
+        """Return True if we should show estimated size instead of Docker-reported size (below minimum only)."""
+        if not self.__is_install or self.__disk_size_bytes is None or self.isLocal():
+            return False
+        try:
+            # Convert byte size to GB
+            local_gb = self.__disk_size_bytes / (1024 ** 3)
+            return local_gb < self.__SIZE_MIN_GB[self.__name.split('-')[0]]
+        except (ValueError, TypeError, KeyError) as e:
+            logger.debug(f"Fallback size check error ({e}) with size {self.__disk_size_bytes} for image {self.__name}")
+            return False
+
+    def __emit_size_fallback_warning(self) -> None:
+        """Emit once per run when fallback is used (verbose, all users)."""
+        if self.__size_fallback_warning_emitted:
+            return
+        self.__size_fallback_warning_emitted = True
+        logger.verbose("Docker reported an unexpected image size; showing an estimate.")
+        # TODO add link to Docker issue
+    # --- END WORKAROUND_DOCKER_SIZE_SIZEONDISK ---
 
     def getRealSize(self) -> str:
         """Image size getter. If the image is installed, return the on-disk size, otherwise return the remote size"""
+        if self.__should_fallback_size():
+            self.__emit_size_fallback_warning()
+            return self.__get_estimated_size_display()
         return self.__disk_size if self.__is_install else f"[bright_black]{self.__disk_size}[/bright_black]"
 
     def getRealSizeRaw(self) -> str:
         """Image size getter without color. If the image is installed, return the on-disk size, otherwise return the remote size"""
-        return self.__disk_size if self.__is_install else self.__disk_size
+        if self.__should_fallback_size():
+            self.__emit_size_fallback_warning()
+            return self.__get_estimated_size_display()
+        return self.__disk_size
 
     def getDownloadSize(self) -> str:
         """Remote size getter"""
